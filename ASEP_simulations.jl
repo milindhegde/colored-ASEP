@@ -4,10 +4,11 @@ using Plots, Plots.PlotMeasures, Distributions, Colors, Format
 # and a negative number the_start which is the coordinate corresponding to the first entry of state, state[1].
 #
 # N is the initial size of the state; particles of color 1 to N are initially placed in reverse order and their positions
-# are tracked. Particles of color N+1 enter from the left and particles of color 0 enter from the right. The state vector
-# returned is actually the state at the random time \tau_t which is the last time before t at which a particle of color in
-# [1,N] attempted a swap. If t is not too large for a given N, this will be off from the state at time t by O(1) many swaps
-# where O(1) is a random quantity with exponential tails.
+# are tracked. Particles of color N+1 enter from the left and particles of color 0 enter from the right; color merging allows
+# us to assme that the colors of incoming particles are 0 and N+1 and ignore their true color. The state vector returned
+# is actually the state at the random time \tau_t which is the last time before t at which a particle of color in [1,N]
+# attempted a swap. If t is not too large for a given N, this will be off from the state at time t by O(1) many swaps where
+# O(1) is a random quantity with exponential tails.
 
 function ASEP_Z(N, t, q)
 	state = reverse(collect(1:N));
@@ -21,7 +22,7 @@ function ASEP_Z(N, t, q)
 	while k <= num_swaps
 		M = length(state)
 		pos = rand(0:M+1) # picks a random position from the current positions in the state as well as the two boundary locations
-		L = rand(Bernoulli(prob));
+		L = rand(Bernoulli(prob)); # probability that the attempted jump is to the left
 		R = Bool(1-L);
 
 		# We increment the swap count k only if the particle picked is one of the original N ones with color in [1,N].
@@ -54,8 +55,9 @@ end
 
 ## ASEP_sheet calls ASEP_state to obtain the state at continuous time t and computes the height function of
 ## the state in a neighborhood of alpha in (-1,1) in the rarefaction fan. It then affinely shifts, recenters, and 
-## scales the height function and plots it using the formulas in Section 2 (\epsilon is calculated from t). the_range parametrizes the domain on which the rescaled height_func is
-## plotted, e.g., the_range = 3 means the plot will be on [-3,3].
+## scales the height function and plots it using the formulas in Section 2 (\epsilon is calculated from t) of 
+## http://arxiv.org/abs/2403.01341. the_range parametrizes the domain on which the rescaled height_func is plotted,
+## e.g., the_range = 3 means the plot will be on [-3,3].
 
 
 function ASEP_sheet(alpha, q, the_range, t)
